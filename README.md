@@ -1,3 +1,5 @@
+![Tasks](https://github.com/flowersmiling/coding-exercise-front/assets/37680291/db711439-aa7a-4167-b949-1daad8d91acf)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
