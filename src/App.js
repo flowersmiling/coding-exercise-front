@@ -1,7 +1,7 @@
 import './App.css';
 import { useState, useEffect } from 'react';
 
-function TodoList({ todos, search  }) {
+function TodoList({ todos, search, toggleComplete }) {
   let filteredTodos = todos.sort((a,b) => a.content.localeCompare(b.content));
 
   if(search) {
@@ -10,23 +10,13 @@ function TodoList({ todos, search  }) {
     });
   }
 
-  function AddtoDone(item) {
-    const baseURL = 'http://localhost:8000';
-    // const addToDone = async (id) => {
-    //   await fetch(`${baseURL}/tasks/${id}`, {
-    //     method: 'PUT',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ status:'done' })
-    //   });
-    // };
-  }
-
   return (
     <ul id="sortable" class="list-unstyled">
       {filteredTodos.map(todo => (
         <li class="ui-state-default" key={todo._id}>
           <div class="checkbox">
-            <label><input type="checkbox" onChange={AddtoDone(todo._id)} />  {todo.content}</label>
+          {/* The onChange handler needs to accept the change event: */}
+            <label><input type="checkbox" onChange={(event) => toggleComplete(todo._id)} />  {todo.content}</label>
           </div>
         </li>
       ))}
@@ -34,7 +24,7 @@ function TodoList({ todos, search  }) {
   );
 }
 
-function DoneList({ dones, search }) {
+function DoneList({ dones, search, toggleUncompleted }) {
   let filteredDones = dones.sort((a,b) => a.content.localeCompare(b.content));
 
   if(search) {
@@ -47,7 +37,8 @@ function DoneList({ dones, search }) {
     <ul id="done-items" class="list-unstyled">
       {filteredDones.map(done => (
         <li key={done._id}>
-          <input type="checkbox" value="" defaultChecked />  {done.content}
+          {/* The onChange handler needs to accept the change event: */}
+          <input type="checkbox" defaultChecked onChange={ (event) => toggleUncompleted(done._id)} />  {done.content}
         </li>
       ))}
     </ul>
@@ -111,6 +102,34 @@ function App(props) {
     setTodos([...todos, newTodo]);
   };
 
+  const toggleComplete = async (id) => {
+    fetch(`${baseURL}/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status:'done' })
+    });
+  
+    const updatedTodos = todos.filter(todo => todo._id !== id);
+    const completedItem = todos.find(todo => todo._id === id);
+  
+    setTodos(updatedTodos);
+    setDones([...dones, completedItem]);
+  }
+
+  const toggleUncompleted = async (id) => {
+    fetch(`${baseURL}/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status:'doing' })
+    });
+  
+    const updatedDones = dones.filter(done => done._id !== id);
+    const uncompletedItem = dones.find(done => done._id === id);
+  
+    setDones(updatedDones);
+    setTodos([...todos, uncompletedItem]);
+  }
+
   const deleteAllTasks = async () => {
     const isSure = window.confirm(
       'ARE YOU SURE to delete all tasks? It cannot be restored!'
@@ -144,34 +163,8 @@ function App(props) {
             <div class="col-md-6">
                 <div class="todolist not-done">
                   <TodoForm addTodo={addTodo} />
-                  {/* <div class="input-group mb-3">
-                    <input type="text" class="form-control"  />
-                    <div class="input-group-append">
-                      <button class="btn btn-outline-secondary" type="button" >Add</button>
-                    </div>
-                  </div> */}
                   <h3>To Do</h3><hr />
-                  <TodoList todos={todos} search={search} />
-                  {/* <ul id="sortable" class="list-unstyled">
-                    <li class="ui-state-default">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" value="" />Take out the trash</label>
-                        </div>
-                    </li>
-                    <li class="ui-state-default">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" value="" />Buy bread</label>
-                        </div>
-                    </li>
-                    <li class="ui-state-default">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" value="" />Teach penguins to fly</label>
-                        </div>
-                    </li>
-                  </ul> */}
+                  <TodoList todos={todos} search={search} toggleComplete={toggleComplete} />
                 </div>
             </div>
             <div class="col-md-6">
@@ -181,10 +174,7 @@ function App(props) {
                 </div>
                   <h3>Done</h3>
                   <hr />
-                  <DoneList dones={dones} search={search} />
-                  {/* <ul id="done-items" class="list-unstyled">
-                      <li>Some item </li>
-                  </ul> */}
+                  <DoneList dones={dones} search={search} toggleUncompleted={toggleUncompleted} />
                 </div>
             </div>
         </div>
